@@ -18,13 +18,13 @@ namespace DynamoDBTest
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public async Task<SkillResponse> FunctionHandler(SkillRequest input, ILambdaContext context)
+        public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
             //ここにDynamoDBにアクセスするコードを追加していく
 
             return new SkillResponse
             {
-                Version = "",
+                Version = "1.0",
                 Response = new ResponseBody()
             };
         }
