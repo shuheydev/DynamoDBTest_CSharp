@@ -27,8 +27,14 @@ namespace DynamoDBTest
             string tableName = "TestTable";//テーブル名
             AmazonDynamoDBClient client = new AmazonDynamoDBClient();//主役。これを介してDynamoDBにアクセスする
 
-            //テーブルを作成
-            CreateTable(client,tableName);
+            //同名テーブルの存在確認
+            if (!IsTableExist(client, tableName))
+            {
+                //テーブルを作成
+                CreateTable(client, tableName);
+            }
+
+            PutItem(client, tableName);
 
             return new SkillResponse
             {
@@ -43,9 +49,8 @@ namespace DynamoDBTest
         /// </summary>
         /// <param name="client"></param>
         /// <param name="tableName"></param>
-        private void CreateTable(IAmazonDynamoDB client,string tableName)
+        private void CreateTable(IAmazonDynamoDB client, string tableName)
         {
-
             //リクエストを構築
             var request = new CreateTableRequest
             {
@@ -56,12 +61,12 @@ namespace DynamoDBTest
                     new AttributeDefinition
                     {
                         AttributeName = "ThisIsId",//カラム名
-                        AttributeType = "N"
+                        AttributeType = "N"//データのタイプ：N：数値、S：文字列、他にもいくつか。勉強中
                     },
                     new AttributeDefinition
                     {
                         AttributeName = "ThisIsSomething",//カラム名
-                        AttributeType = "N"
+                        AttributeType = "N"//データのタイプ：N：数値、S：文字列、他にもいくつか。勉強中
                     }
                 },
                 //勉強中
@@ -70,12 +75,12 @@ namespace DynamoDBTest
                     new KeySchemaElement
                     {
                         AttributeName = "ThisIsId",
-                        KeyType = "HASH" //Partition key
+                        KeyType = KeyType.HASH //Partition key
                     },
                     new KeySchemaElement
                     {
                         AttributeName = "ThisIsSomething",
-                        KeyType = "RANGE" //Sort key
+                        KeyType = KeyType.RANGE,//Sort key
                     }
                 },
                 //勉強中
@@ -95,11 +100,50 @@ namespace DynamoDBTest
             //.Wait()メソッドで非同期メソッドを同期メソッドにしちゃえば、返り値も変えなくていいし、テーブル作成完了まで待つことができる。
             //一回完結のサーバー側の処理で非同期でなきゃいけない理由ないしね。
             //client.CreateTableAsync(request).Wait();
-            
+
             //Waitメソッドではただ非同期メソッドの完了を待つだけでしたが、非同期メソッドの返り値を取得したい場合は、Resultプロパティを使いましょう。
             //Resultプロパティにアクセスすることで、非同期メソッドの完了を待った上で結果を取得することができます。
             //結果を使って何か処理を行いたい場合はこちらが良いのではないでしょうか。
-            var result=client.CreateTableAsync(request).Result;
+            var result = client.CreateTableAsync(request).Result;
+        }
+
+
+        /// <summary>
+        /// 同名のテーブルが存在するかをチェックします。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        private bool IsTableExist(IAmazonDynamoDB client, string tableName)
+        {
+            //テーブル一覧を取得
+            var tableList = client.ListTablesAsync().Result;
+            //TableNamesプロパティをチェック
+            return tableList.TableNames.Exists(s => s.Equals(tableName));
+        }
+
+
+        /// <summary>
+        /// データをテーブルに追加します。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="tableName"></param>
+        private void PutItem(IAmazonDynamoDB client, string tableName)
+        {
+            //リクエストの構築
+            var request = new PutItemRequest
+            {
+                TableName = tableName,//追加先のテーブル名
+                //各カラムの値を指定
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    {"ThisIsId",new AttributeValue{N= "2"} },
+                    {"ThisIsSomething",new AttributeValue{N="5"} }
+                }
+            };
+
+            //テーブルに追加
+            var result = client.PutItemAsync(request).Result;
         }
     }
 }
