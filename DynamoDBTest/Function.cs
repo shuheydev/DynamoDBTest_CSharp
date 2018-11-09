@@ -94,7 +94,12 @@ namespace DynamoDBTest
             //でもメソッドにasyncつけたら、最終的にスキルのレスポンスの型もTask<SkillResponse>にしなきゃいけなくなってだめ。
             //.Wait()メソッドで非同期メソッドを同期メソッドにしちゃえば、返り値も変えなくていいし、テーブル作成完了まで待つことができる。
             //一回完結のサーバー側の処理で非同期でなきゃいけない理由ないしね。
-            client.CreateTableAsync(request).Wait();
+            //client.CreateTableAsync(request).Wait();
+            
+            //Waitメソッドではただ非同期メソッドの完了を待つだけでしたが、非同期メソッドの返り値を取得したい場合は、Resultプロパティを使いましょう。
+            //Resultプロパティにアクセスすることで、非同期メソッドの完了を待った上で結果を取得することができます。
+            //結果を使って何か処理を行いたい場合はこちらが良いのではないでしょうか。
+            var result=client.CreateTableAsync(request).Result;
         }
     }
 }
